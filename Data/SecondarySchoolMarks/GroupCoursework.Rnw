@@ -1,0 +1,816 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[sc]{mathpazo}  % Font: Palatino with small caps
+\usepackage{geometry}      % Margin control
+\usepackage{amsmath}       % Math tools
+\usepackage{booktabs}      % Better tables
+\usepackage[most]{tcolorbox} % Colored boxes and more
+\usepackage{xcolor}        % Color handling
+\usepackage{sectsty}       % Section color styling
+\usepackage{hyperref}      % Hyperlinks
+\usepackage{framed}        % Shaded environments
+\usepackage{graphicx}      % Images
+\usepackage{fancyhdr}      % Header and footer
+\usepackage{fancybox}      % Boxed content
+\usepackage[table]{xcolor} % Colored tables
+
+% ---------- COLORS ----------
+\definecolor{sectiongreen}{rgb}{0.0, 0.3, 0.2}      % Dark green for section titles
+\definecolor{subsectiongreen}{rgb}{0.1, 0.5, 0.4}   % Medium green for subsection titles
+\definecolor{chunkborder}{rgb}{0.8, 0.85, 0.8}      % Chunk border color
+\definecolor{fgcolor}{rgb}{0.15, 0.15, 0.15}        % Default text color
+\definecolor{shadecolor}{rgb}{0.95, 0.99, 0.95}     % Very light pastel green for code background
+
+% ---------- SECTION STYLING ----------
+\sectionfont{\color{sectiongreen}}
+\subsectionfont{\color{subsectiongreen}}
+
+% ---------- HYPERLINK STYLING ----------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=sectiongreen,  
+    urlcolor=sectiongreen,
+    citecolor=sectiongreen
+}
+
+% ---------- CODE CHUNK STYLING ----------
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+
+\makeatletter
+\renewenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{%
+   \hskip\@totalleftmargin \hskip-\fboxsep
+   \fcolorbox{chunkborder}{shadecolor}{%
+     \makebox[\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax][l]{##1}%
+   }%
+   \hskip-\fboxsep
+   \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth%
+ }%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+
+% ---------- PAGE HEADER/FOOTER ----------
+\pagestyle{fancy}
+\fancyhead[L]{Computational Statistics}
+\fancyhead[R]{Group coursework}
+\renewcommand{\footrulewidth}{1pt}
+
+
+% ---------- Start of the document ----------
+\begin{document}
+
+<<setup, include=FALSE>>=
+library(knitr)
+opts_chunk$set(
+  echo = TRUE,
+  highlight = TRUE
+)
+
+# Avoid knitr's default gray background
+knit_hooks$set(document = function(x) {
+  gsub("\\\\definecolor\\{shadecolor\\}\\{rgb\\}\\{0\\.969, 0\\.969, 0\\.969\\}", "", x)
+})
+@
+
+% ------------------ COVER PAGE ------------------
+\begin{titlepage}
+\begin{center}
+
+% Logos
+\begin{minipage}{0.9\textwidth}
+  \begin{minipage}{0.48\textwidth}
+    \includegraphics[width=0.9\textwidth]{imagenlogo.png}  % Left logo
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.48\textwidth}
+    \flushright
+    \includegraphics[width=0.6\textwidth]{fcienciasLogo.png}  % Right logo
+  \end{minipage}
+\end{minipage}
+
+\vspace{1cm}
+
+{\LARGE \bfseries Group Coursework \\[0.3cm]}
+{\large Computational Statistics}
+
+\vspace{1cm}
+
+\begin{large}
+Isabel De la Higuera Mateos\\
+Alejandro Morales Alaminos\\
+Gabriel Padilla Haro
+
+\end{large}
+
+\vspace{0.5cm}
+{\large \today}
+
+% ------------------ ABSTRACT ------------------
+\begin{abstract}
+\small
+As students, it is of vital importance to identify the factors that promote or hinder the achievement of good academic performance in higher education. This study explores some of these factors—including their demographics, study habits, parental involvement, extracurricular activities, and academic performance—through the analysis of data collected from $2392$ high school students. To this end, a multinomial analysis is conducted to assess the influence of these factors on the variable \textit{GradeClass}, which classifies students' grades into distinct categories, and the number of explanatory variables is reduced to simplify the model.
+
+The results indicate that parental support, academic tutoring, and participation in extracurricular activities—particularly sports—have a significant positive impact on students’ performance. In contrast, variables such as gender, ethnicity, and parental education level show no clear effect. Absenteeism is also found to negatively influence academic outcomes, while the effect of study time is only marginal. This analysis provides meaningful insights for educational research, predictive modeling, and statistical analysis, as well as serving as an incentive for the implementation of support measures that promote academic success.
+
+\end{abstract}
+
+\vspace{0.6cm}
+\tableofcontents
+\end{center}
+\end{titlepage}
+\newpage
+
+% ------------------ CONTENT ------------------
+
+\section{Introduction}
+
+The objective of our analysis is to identify the factors that most influence whether a student improves their grades compared to the reference category "F" (failed). The motivation lies in seeking measures to help such students improve their academic performance by analyzing the influencing factors that affect their grades. In addition, this study will help us extend our knowledge of regression models studied during the course.
+
+To this end, we have selected a database that contains comprehensive information on high school students and several factors that can affect their academic performance. The target variable classifies students' grades into distinct categories and will be useful to determine the influence of these factors.
+
+This database has several advantages for our purposes:
+
+\begin{enumerate}
+\item First, it contains a high number of observations ($2392$), as well as a large number of regressor variables, which makes the resulting analysis potentially more meaningful.
+\item By considering a categorical response variable with more than two categories, we can apply a multinomial logistic method, giving us the opportunity to expand on the knowledge acquired during the course and apply familiar concepts related to linear regression models. Moreover, this requires us to extend the bibliography studied in the course, which is also a good exercise to improve our ability to search for useful and reliable information, in addition to contrasting from different sources.
+\item The insights obtained from this analysis could be useful for our upcoming years as students.
+\end{enumerate}
+
+\section{The dataset}
+
+We have selected a database that contains comprehensive information on $2392$ high school students, detailing their demographics, study habits, parental involvement, extracurricular activities, and academic performance. The target variable, \textit{GradeClass}, classifies students' grades into distinct categories, providing a robust dataset for educational research, predictive modeling, and statistical analysis. It is part of Kaggle's platform, home to a vast trove of open and accessible data. In order to explore this database, refer to \cite{rabie_el_kharoua_2024}. 
+
+This dataset has been downloaded around $50000$ times, so it has surely been used numerous times for statistical analysis. We can find some of these analyses in the following links:
+\begin{itemize}
+\item \cite{alvin_2024}. This article delves into the analysis of students' performance using the dataset. Alvin Luyza Pramudya provides a comprehensive breakdown of the factors influencing student performance, utilizing various data visualization techniques to illustrate key insights.
+\item We can also find several code solutions in the ``code'' section of the dataset: \href{https://www.kaggle.com/datasets/rabieelkharoua/students-performance-dataset/code}{analysis with code examples}.
+\end{itemize}
+
+The regressor variables can be classified into the following groups: Student Information (\textit{Student ID}, Demographic Details, Study Habits), Parental Involvement, Extracurricular Activities, Academic Performance, and the Target Variable: \textit{GradeClass}.
+
+Let us now review each of the variables involved in the dataset:
+\begin{itemize}
+\item Student Information:
+
+\textit{Student ID:} A unique identifier assigned to each student (1001 to 3392).
+
+\textit{Age:} The age of the students ranges from 15 to 18 years.
+
+\textit{Gender:} Gender of the students, where 0 represents Male and 1 represents Female.
+
+\textit{Ethnicity:} The ethnicity of the students, coded as follows:
+\begin{itemize}
+\item 0: Caucasian.
+\item 1: African American.
+\item 2: Asian.
+\item 3: Other.
+\end{itemize}
+
+\textit{ParentalEducation:} The education level of the parents, coded as follows:
+\begin{itemize}
+\item 0: None.
+\item 1: High School.
+\item 2: Some College.
+\item 3: Bachelor's.
+\item 4: Higher.
+\end{itemize}
+
+\textit{StudyTimeWeekly:} Weekly study time in hours, ranging from 0 to 20.
+
+\textit{Absences:} Number of absences during the school year, ranging from 0 to 30.
+
+\textit{Tutoring:} Tutoring status, where 0 indicates No and 1 indicates Yes.
+
+\item Parental Involvement:
+
+\textit{ParentalSupport:} The level of parental support, coded as follows:
+\begin{itemize}
+\item 0: None.
+\item 1: Low.
+\item 2: Moderate.
+\item 3: High.
+\item 4: Very High.
+\end{itemize}
+
+\item Extracurricular Activities:
+
+\textit{Extracurricular:} Participation in extracurricular activities, where 0 indicates No and 1 indicates Yes.
+
+\textit{Sports:} Participation in sports, where 0 indicates No and 1 indicates Yes.
+
+\textit{Music:} Participation in music activities, where 0 indicates No and 1 indicates Yes.
+
+\textit{Volunteering:} Participation in volunteering, where 0 indicates No and 1 indicates Yes.
+
+\item Academic Performance:
+
+\textit{GPA:} Grade Point Average on a scale from 0.0 to 4.0, influenced by study habits, parental involvement, and extracurricular activities.
+
+\item Target Variable: 
+
+\textit{GradeClass:} Classification of students' grades based on GPA:
+\begin{itemize}
+\item 0: `A' ($\text{GPA} \geq 3.5$).
+\item 1: `B' ($3.0 \leq \text{GPA} < 3.5$).
+\item 2: `C' ($2.5 \leq \text{GPA} < 3.0$).
+\item 3: `D' ($2.0 \leq \text{GPA} < 2.5$).
+\item 4: `F' ($\text{GPA} < 2.0$)
+\end{itemize}
+\end{itemize}
+
+Before proceeding with the analysis, we first load the dataset and verify that there are no missing values (\texttt{NA}s). This step is essential to ensure data integrity and avoid issues during model fitting.
+
+<<include=FALSE>>=
+dataf<-read.csv('studentperformance.csv')
+dataf$GradeClass <- factor(dataf$GradeClass, labels=c('A','B','C','D','F')) 
+# Academic performance level
+@
+
+<<>>=
+sum(is.na(dataf)==TRUE) 
+@
+
+The output confirms that there are no missing values in the dataset. Now, we can get a first look at the dataset by summarizing its variables using the known function \texttt{summary()}. 
+
+<<include=FALSE>>=
+summary(dataf)
+@
+
+We present the obtained results in two separate tables: one for the numerical variables and the other for the categorical ones.
+
+\begin{table}[h!]
+\centering
+\small
+\arrayrulecolor{sectiongreen}  % Optional: dark green borders
+\begin{tabular}{
+  >{\columncolor{shadecolor}}l
+  |c|c|c|c|c|c
+}
+\toprule
+\rowcolor{subsectiongreen!20}
+\textbf{Variable} & \textbf{Min.} & \textbf{1st Qu.} & \textbf{Median} & \textbf{Mean} & \textbf{3rd Qu.} & \textbf{Max.} \\
+\midrule
+Age                & 15.00 & 15.00  & 16.00  & 16.47  & 17.00  & 18.00 \\
+StudyTimeWeekly    & 0.001 & 5.04   & 9.71   & 9.77   & 14.41  & 19.98 \\
+Absences           & 0.00  & 7.00   & 15.00  & 14.54  & 22.00  & 29.00 \\
+GPA                & 0.00  & 1.175  & 1.893  & 1.906  & 2.622  & 4.00 \\
+\bottomrule
+\end{tabular}
+\caption{Summary statistics of numerical variables}
+\label{tab:numerical_summary}
+\arrayrulecolor{black}  % Reset to default color
+\end{table}
+
+
+\begin{table}[h!]
+\centering
+\small
+\begin{tabular}{
+  >{\columncolor{shadecolor}}l
+  |>{\columncolor{white}}c
+}
+\toprule
+\rowcolor{subsectiongreen!20}
+\textbf{Variable} & \textbf{Frequencies} \\
+\midrule
+Gender            & Male: 1170,\quad Female: 1222 \\
+Ethnicity         & 0: 1207,\quad 1: 493,\quad 2: 470,\quad 3: 222 \\
+ParentalEducation & 0: 243,\quad 1: 728,\quad 2: 934,\quad 3: 367,\quad 4: 120 \\
+ParentalSupport   & 0: 212,\quad 1: 489,\quad 2: 740,\quad 3: 697,\quad 4: 254 \\
+Extracurricular   & No: 1475,\quad Yes: 917 \\
+Sports            & No: 1666,\quad Yes: 726 \\
+Music             & No: 1921,\quad Yes: 471 \\
+Volunteering      & No: 2016,\quad Yes: 376 \\
+Tutoring          & No: 1671,\quad Yes: 721 \\
+GradeClass        & A: 107,\quad B: 269,\quad C: 391,\quad D: 414,\quad F: 1211 \\
+\bottomrule
+\end{tabular}
+\caption{Frequencies of categorical variables}
+\label{tab:categorical_summary}
+\end{table}
+
+Something to keep in mind is that, as shown in the table, 1211 students (more than 50 percent) have a GPA below 2, which places them in category F, while only 107 fall into category A (less than five percent). This should be taken into account in further analysis; for example, we will use the category F as the reference category in the multinomial model.
+
+\section{The model}
+
+For the mathematical expression we follow \cite{notes}. We consider \( Y = \textit{GradeClass} \), the classification of the students' grades, as the response variable. It is a categorical variable with five levels: `0', `1', `2', `3' and `4', which correspond to `A',`B', `C', `D' and `F', so we are going to apply a multinomial regression model. First, we show its mathematical formulation, considering 0 as the reference level:
+\[
+\log\left(\frac{P(Y=k \mid X)}{P(Y=0 \mid X)}\right) = \beta_{k,0} + \beta_{k,1}X_1 + \ldots + \beta_{k,p}X_p, \quad k=1, \ldots, 4,
+\]
+where \( p \) is the number of regressors.
+
+During the initial data exploration, we observed that some entries were incorrectly coded: the \textit{GradeClass} category did not match the actual \textit{GPA} value. For instance, in row $2117$, the \textit{GPA} is $3.137624$, which falls into the B range, but the recorded \textit{GradeClass} is D.
+
+To systematically detect these inconsistencies, we computed a temporary variable, based on the official \textit{GPA} thresholds, and compared it to the existing \textit{GradeClass} labels.
+
+<<echo=FALSE>>=
+dataf$CorrectClass <- cut(dataf$GPA,
+                       breaks = c(-Inf, 2.0, 2.5, 3.0, 3.5, Inf),
+                       labels = c("F", "D", "C", "B", "A"),
+                       right = FALSE)  # Create temporary column based on GPA thresholds
+# Extract mismatches for inspection
+df_errors <- dataf[dataf$GradeClass != dataf$CorrectClass, 
+                   c("GPA", "GradeClass", "CorrectClass")]
+@
+
+<<>>=
+head(df_errors,n=3)
+@
+The output shows a few examples where the original classification did not correspond to the student's GPA. To correct these inconsistencies, we updated the \textit{GradeClass} variable to match the computed \texttt{CorrectClass}.
+
+<<include=FALSE>>=
+dataf$GradeClass <- dataf$CorrectClass
+dataf$CorrectClass <- NULL  # Remove temporary column
+@
+
+ To detect the possible outliers, we compute Pearson residuals \cite{faraway2016} for each level of the response variable. The \textbf{Pearson residuals} for each observation \( i \) are defined as:
+
+\[
+r_i = \frac{y_i - \hat{p}_i}{\sqrt{\hat{p}_i (1 - \hat{p}_i)}}
+\]
+
+where:
+
+\begin{itemize}
+  \item \( y_i \in \{0, 1\} \) is the observed value for observation \( i \),
+  \item \( \hat{p}_i \) is the estimated probability from the model that \( y_i = 1 \),
+  \item The binomial variance is \( \hat{p}_i (1 - \hat{p}_i) \), assuming the number of trials \( n_i = 1 \).
+\end{itemize}
+
+We consider as outliers those observations whose residual is greater than $3$ or less than $-3$.
+<<include=FALSE>>=
+dataf$GradeClass <- relevel(dataf$GradeClass, ref = "F")
+table(dataf$Ethnicity)  # Verify levels
+
+levels(factor(dataf$Ethnicity))  # Ensure levels are correctly defined
+# Although there are 4 levels, when converting to dummy variables for use in a model,
+# only k−1 dummy variables are created.
+# Dummy variables allow us to include categorical predictors in linear or log-linear models.
+# We take 0: Caucasian as the reference level.
+# Coefficients Ethnicity1, Ethnicity2, and Ethnicity3 are interpreted as comparisons
+# relative to Caucasian students.
+
+# We create dataf.num in order to analyze the multicolinearity later.
+dataf.num <- dataf
+
+# Ensure categorical variables are treated as factors
+dataf$Gender<- factor(dataf$Gender, labels=c("Male","Female"))
+dataf$Ethnicity <- factor(dataf$Ethnicity)
+dataf$ParentalEducation <- factor(dataf$ParentalEducation)  # 0 = none, 4 = higher education (assumed)
+dataf$ParentalSupport <- factor(dataf$ParentalSupport)      # 0 = none, 4 = very high
+dataf$Tutoring <- factor(dataf$Tutoring, labels = c("No", "Yes"))  # Tutoring status
+dataf$Extracurricular <- factor(dataf$Extracurricular, labels = c("No", "Yes"))
+dataf$Sports <- factor(dataf$Sports, labels = c("No", "Yes"))
+dataf$Music <- factor(dataf$Music, labels = c("No", "Yes"))
+dataf$Volunteering <- factor(dataf$Volunteering, labels = c("No", "Yes"))
+@
+
+<<include=FALSE>>=
+library(nnet)
+@
+
+<<include=FALSE>>=
+# We now fit the multinomial model, without taking into account the StudentID variable, as it is not significant
+mod1 <- multinom(GradeClass ~ Age + Gender + Ethnicity +
+                          ParentalEducation + StudyTimeWeekly + Absences +
+                          Tutoring + ParentalSupport + Extracurricular + Sports +
+                          Music + Volunteering,
+                 data = dataf, maxit = 1000, model = TRUE)
+@
+
+<<include=FALSE>>=
+## We compute the residuals:
+# Estimated probabilities by observation and category
+prob <- predict(mod1, type = "probs")  # n x J matrix
+
+# Create observed matrix (one-hot encoding)
+observados <- model.matrix(~ GradeClass - 1, data = dataf)
+observados
+
+# Calculate Pearson residuals for each cell
+residuos <- (observados - prob) / sqrt(prob * (1 - prob))
+
+# Identify observations with residuals greater than 3 or less than -3
+posiciones <- unique(which(abs(residuos) > 3, arr.ind = TRUE)[, 1])
+length(posiciones)
+# The length is 54, this is, there are 54 outliers.
+@
+
+We plot a visual representation for each level of the response variable:
+<<include=FALSE>>=
+old_par <- par()
+@
+
+<<echo=FALSE, fig.width=10, fig.height=10>>=
+par(mfrow = c(3, 2))
+for (i in 1:ncol(residuos)) {
+  plot(residuos[, i],
+       main = paste("Pearson Residuals for", colnames(residuos)[i]),
+       xlab = "Index",
+       ylab = "Residual",
+       pch = 21,
+       bg = "lightgreen",
+       col = "darkgreen",
+       ylim = c(-4, 10))  # We adjust the graphic 
+  abline(h = 3, col = 'red', lty = 2)
+  abline(h = -3, col = 'red', lty = 2)
+}
+@
+
+
+<<include=FALSE>>=
+par(old_par)
+@
+
+The number of observations is much larger ($2392$ values) than the number of outliers ($54$ values), so we decide to remove them. Therefore, we need to refit the model with the new dataset.
+<<include=FALSE>>=
+# Remove outliers from the dataset
+dataf <- dataf[-posiciones, ]
+dataf.num <- dataf.num[-posiciones, ]
+@
+
+<<include=FALSE>>=
+# Refit the model since dataf has changed
+mod1 <- multinom(GradeClass ~ Age + Gender + Ethnicity +
+                          ParentalEducation + StudyTimeWeekly + Absences +
+                          Tutoring + ParentalSupport + Extracurricular + Sports +
+                          Music + Volunteering,
+                 data = dataf, maxit = 1000, model = TRUE)
+@
+
+Although we have already fitted the full model to identify and remove outliers, we now verify whether the underlying assumptions of the multinomial logistic regression are reasonably satisfied. This validation step is essential before interpreting the results or refining the model. In particular, multiple linear regression relies on several key conditions to ensure the validity of the estimates and the conclusions drawn from them. One of these is the \textbf{absence of multicollinearity} among the explanatory variables.
+
+This occurs when two or more independent variables in a multiple regression model are highly linearly correlated, meaning that one can be linearly predicted from the others with a substantial degree of accuracy. In order to properly apply the regression model, multicollinearity must be absent among the explanatory variables, that is, they should not be highly linearly correlated with each other.
+
+To detect potential multicollinearity, we first examine the correlation matrix of the numerical variables, as it is done in \cite{notes}:
+
+<<corrplot, fig.width=4, fig.height=4>>=
+corrplot::corrplot(cor(dataf.num[, sapply(dataf.num, is.numeric)]))
+@
+
+Since the correlation matrix only includes numerical variables, the categorical variable \textit{GradeClass} is not shown. From the plot, we observe that \textit{GPA} exhibits a noticeable negative correlation with \textit{Absences}, suggesting that students who miss more classes tend to have lower academic performance. Although this is not a strong multicollinearity issue, we keep it in mind when analyzing the results, especially if it affects the stability of the model coefficients.
+
+To complement the correlation analysis, we compute the \textbf{Variance Inflation Factor (VIF)} for each predictor, which quantifies the degree of multicollinearity in the model. A VIF value close to 1 suggests absence of multicollinearity, while values above 5 or 10 may indicate a problem \cite{notes}. The variable \textit{StudentID} is excluded from the analysis, as it carries no explanatory power.  For this purpose, we used a linear model fitted via the \texttt{lm()} function in R, taking \textit{GPA} as the response variable.
+<<include=FALSE>>=
+vifmodel <- lm(GPA ~ Age+Gender+Ethnicity+ParentalEducation+
+                 StudyTimeWeekly+Absences+Tutoring+ParentalSupport+
+                 Extracurricular+Sports+Music+Volunteering, data=dataf)
+@
+
+<<>>=
+car::vif(vifmodel)
+@
+The resulting VIF values (specifically, the adjusted measure $\text{GVIF}^{1/(2  \text{Df})}$ for categorical variables) are all \textbf{very close to 1}, which indicates an \textbf{absence of multicollinearity} in the model. This transformation is necessary because the raw GVIF values are not directly comparable across variables with different degrees of freedom. As explained in \texttt{car::vif()}, the adjusted measure ensures that VIF values for factors (converted internally to dummy variables) can be interpreted on the same scale as those for numerical predictors. Therefore, we can conclude that the non-collinearity assumption is satisfactorily met in our data.
+
+To assess the statistical significance of the predictors, we compute \textbf{confidence intervals} for the model coefficients using the \texttt{confint()} function in R. A key aspect is whether these intervals contain the value zero: if zero is included, the corresponding variable may not have a statistically significant effect on the response. According to \cite{notes}, this analysis complements the interpretation of p-values and helps identify which predictors contribute meaningfully to the model.
+<<include=FALSE>>=
+confint(vifmodel)
+@
+
+
+\begin{table}[h!]
+\centering
+\small
+\arrayrulecolor{sectiongreen}
+\begin{tabular}{>{\columncolor{shadecolor}}l|c|c}
+\toprule
+\rowcolor{subsectiongreen!20}
+\textbf{Variable} & \textbf{Lower bound (2.5\%)} & \textbf{Upper bound (97.5\%)} \\
+\midrule
+GenderFemale         & -0.0019 & 0.0289 \\
+Ethnicity1           & -0.0119 & 0.0285 \\
+Ethnicity2           & -0.0157 & 0.0256 \\
+Ethnicity3           & -0.0291 & 0.0260 \\
+ParentalEducation1   & -0.0372 & 0.0185 \\
+ParentalEducation2   & -0.0253 & 0.0289 \\
+ParentalEducation3   & -0.0483 & 0.0138 \\
+ParentalEducation4   & -0.0226 & 0.0609 \\
+VolunteeringYes      & -0.0255 & 0.0169 \\
+\bottomrule
+\end{tabular}
+\label{tab:confint_nonsignif}
+\arrayrulecolor{black}
+\end{table}
+
+In our case, the variables \textit{GenderFemale}, \textit{VolunteeringYes}, and all remaining levels of both \textit{Ethnicity} and \textit{Parental Education} have confidence intervals that include zero, indicating that their effects are not statistically significant at the 95\% confidence level. On the other hand, the confidence intervals of the variables that are not shown in the table do not include zero, so their effects seem to be relevant.
+
+
+Another key assumption is the \textbf{independence of observations}, which implies that each data point contributes unique information and is not influenced by the others. This is a standard requirement in regression models to ensure the validity of statistical inference. In our context, this assumption is considered reasonable, as each observation corresponds to a different student and there is no indication of repeated measures or clustering.
+
+Finally, since we will be applying a multinomial logistic regression model in the next stage of the analysis, we also assume that the response variable follows a \textbf{multinomial distribution}. This is appropriate for modelling categorical outcomes with more than two levels, such as \textit{GradeClass}.
+
+
+\section{Statistical analysis}
+
+Following the approach adopted in \cite{ramon}, we test the significance of our model by comparing it to a null model that contains only the intercept. We use a \(\chi^2\) test to compare both models.
+
+<<include=FALSE>>=
+mod1sinpar <- nnet::multinom(GradeClass ~ 1, data=dataf, maxit=1000, model=TRUE)
+@
+
+We use the \texttt{anova(mod1sinpar, mod1)} function to perform a likelihood ratio test comparing the null model (intercept-only) with the full model including all explanatory variable. 
+<<include=FALSE>>=
+anova(mod1sinpar, mod1)
+@
+We collect the obtained results in the following table:
+\begin{table}[h!]
+\centering
+\small
+\arrayrulecolor{sectiongreen}
+\begin{tabular}{>{\columncolor{shadecolor}}l|c|c|c|c|c}
+\toprule
+\rowcolor{subsectiongreen!20}
+\textbf{Model} & \textbf{Residual df} & \textbf{Residual Deviance} & \textbf{Df} & \textbf{LR Stat.} & \textbf{Pr(Chi)} \\
+\midrule
+1 (Null model) & 9348 & 5914.130 & NA & NA & NA \\
+2 (Full model) & 9268 & 1384.594 & 80 & 4529.535 & 0 \\
+\bottomrule
+\end{tabular}
+\caption{Likelihood Ratio Test comparing null and full model}
+\label{tab:anova_model}
+\arrayrulecolor{black}
+\end{table}
+
+The p-value is $0$, so the model is significant, as we wanted.
+
+Now, we check the goodness of fit of the model calculating  McFadden, Cox and Snell, and Nagelkerke pseudo R-squared values \cite{mcnulty2021multinomial}. 
+
+<<include=FALSE>>=
+# Load DescTools package for pseudo R-squared computation
+library('DescTools')
+@ 
+
+<<>>=
+# Calculate McFadden, Cox-Snell, and Nagelkerke pseudo R-squared values
+PseudoR2(mod1, which = c("McFadden", "CoxSnell", "Nagelkerke"))
+@ 
+
+$R^2_{McFadden}=0.7658837$ suggests that the predictors in the model provide a $76.588$\% improvement in the log-likelihood over the null model, which is considered incredibly good \cite{numberanalytics2025mcfadden}. In addition, $R^2_{CoxSnell}=0.8559154$ takes a value near $1$ and, as we know that its upper bound is lower than $1$, the fit seems to be excellent. Moreover, $R^2_{Nagelkerke}=0.9300330$ takes a value really close to $1$, which indicates a great fit because $R^2_{Nagelkerke}$ divides $R^2_{CoxSnell}$ by its upper bound, that is, it standardises it \cite{allison2012r2logistic}. In conclusion, we can ensure a good fit of the model.
+
+\paragraph{Basic inference related to the model.}
+
+\begin{equation*}
+	\left\{
+	\begin{aligned}
+		H_0:\beta_{j,k} &=0, \\
+		H_1: \beta_{j,k} &\neq 0,
+	\end{aligned}
+	\right.
+\end{equation*}
+is carried out using the \textbf{Wald statistic}:
+\[
+z=\frac{\widehat{\beta_{j,k}}}{SE(\widehat{\beta_{j,k}})},
+\]
+where $z$ follows a standard normal distribution with mean $0$ and variance $1$, and $SE$ is the standard error.
+
+We compute the p-values to assess which variables and categories might be excluded:
+\[
+p=2(1-\Phi(z)),
+\]
+where $\Phi$ denotes the cumulative distribution function of the standard normal distribution with mean $0$ and variance $1$ \cite{agresti2019cathegorical}.
+
+<<>>=
+# Compute Wald test statistics and p-values for coefficients
+z <- summary(mod1)$coefficients / summary(mod1)$standard.errors
+pvals <- 2 * (1 - pnorm(abs(z)))
+pvals
+@ 
+
+
+If the p-value is lower than $0.05$, we consider removing the corresponding variable. These p-values are also used to validate the stepwise selection performed by \texttt{stepAIC}.
+
+Next, we perform variable selection using the function \texttt{stepAIC()} \cite{notes}. However, we could have used another functions, such as \texttt{lrtest()} \cite{lrtest}, which compares by variables instead of by categories.
+
+<<include=FALSE>>=
+# Load MASS package for stepwise AIC model selection
+library('MASS')
+
+@
+
+<<results=FALSE>>=
+# Apply stepwise selection in both directions
+step_mod <- stepAIC(mod1, direction = "both", trace = FALSE)
+@
+
+<<include=FALSE>>=
+# Let's see the results
+step_mod
+@
+
+According to the \texttt{stepAIC} method, the model should exclude the following explanatory variables: \textit{Gender}, \textit{Ethnicity}, \textit{ParentalEducation} and \textit{Volunteering}. This coincides with the analysis done using confint and the Wald-statistic. There is only one difference, the Wald-statistic suggests to delete the variable \textit{Age}, whereas the other two methods recommend the opposite. Therefore, we decide to retain the variable \textit{Age} in the new model.
+
+Based on the selected variables, we refit the multinomial logistic regression model. The resulting model yields the following expressions:
+
+<<include=FALSE>>=
+# Fit the final reduced multinomial logistic model
+mod2 <- multinom(GradeClass ~ Age + StudyTimeWeekly + Absences + Tutoring + ParentalSupport + Extracurricular + Sports + Music, data = dataf, maxit = 1e3, model = TRUE) # mod2 is the refitted model after using stepAIC()
+summary(mod2)
+@ 
+
+\subsection*{Class A vs F}
+\begin{center}
+\setlength{\fboxsep}{10pt}
+\doublebox{
+\begin{minipage}{0.93\textwidth}
+\begin{align*}
+\log\left(\frac{P(Y = A)}{P(Y = F)}\right) =\ 
+& -8.9689 + 0.1267\, \text{Age} + 1.1932\, \text{StudyTimeWeekly} - 4.4478\, \text{Absences} \\
+& + 10.5693\, \text{TutoringYes} + 5.7761\, \text{ParentalSupport1} + 11.6468\, \text{ParentalSupport2} \\
+& + 19.2224\, \text{ParentalSupport3} + 25.0356\, \text{ParentalSupport4} \\
+& + 8.3816\, \text{ExtracurricularYes} + 8.7510\, \text{SportsYes} + 5.9213\, \text{MusicYes}
+\end{align*}
+\end{minipage}
+}
+\end{center}
+\subsection*{Class B vs F}
+\begin{center}
+\setlength{\fboxsep}{10pt}
+\doublebox{
+\begin{minipage}{0.93\textwidth}
+\begin{align*}
+\log\left(\frac{P(Y = B)}{P(Y = F)}\right) =\ 
+& 0.4522 + 0.0237\, \text{Age} + 0.9687\, \text{StudyTimeWeekly} - 3.4176\, \text{Absences} \\
+& + 8.2106\, \text{TutoringYes} + 5.0097\, \text{ParentalSupport1} + 10.2525\, \text{ParentalSupport2} \\
+& + 15.9430\, \text{ParentalSupport3} + 20.0925\, \text{ParentalSupport4} \\
+& + 6.1320\, \text{ExtracurricularYes} + 6.7758\, \text{SportsYes} + 4.5302\, \text{MusicYes}
+\end{align*}
+\end{minipage}
+}
+\end{center}
+
+\vspace{0.7cm}
+\subsection*{Class C vs F}
+\begin{center}
+\setlength{\fboxsep}{10pt}
+\doublebox{
+\begin{minipage}{0.93\textwidth}
+\begin{align*}
+\log\left(\frac{P(Y = C)}{P(Y = F)}\right) =\ 
+& 6.7877 + 0.0552\, \text{Age} + 0.6452\, \text{StudyTimeWeekly} - 2.2168\, \text{Absences} \\
+& + 5.0890\, \text{TutoringYes} + 2.0373\, \text{ParentalSupport1} + 5.4216\, \text{ParentalSupport2} \\
+& + 9.4328\, \text{ParentalSupport3} + 11.9162\, \text{ParentalSupport4} \\
+& + 4.0792\, \text{ExtracurricularYes} + 3.9171\, \text{SportsYes} + 2.5541\, \text{MusicYes}
+\end{align*}
+\end{minipage}
+}
+\end{center}
+
+\subsection*{Class D vs F}
+\begin{center}
+\setlength{\fboxsep}{10pt}
+\doublebox{
+\begin{minipage}{0.93\textwidth}
+\begin{align*}
+\log\left(\frac{P(Y = D)}{P(Y = F)}\right) =\ 
+& 10.0613 - 0.1872\, \text{Age} + 0.3350\, \text{StudyTimeWeekly} - 1.1361\, \text{Absences} \\
+& + 2.2719\, \text{TutoringYes} + 0.9244\, \text{ParentalSupport1} + 2.5689\, \text{ParentalSupport2} \\
+& + 4.9094\, \text{ParentalSupport3} + 5.9730\, \text{ParentalSupport4} \\
+& + 1.8270\, \text{ExtracurricularYes} + 2.0311\, \text{SportsYes} + 1.1306\, \text{MusicYes}
+\end{align*}
+\end{minipage}
+}
+\end{center}
+
+To better interpret the coefficients of the multinomial logistic model, we compute the \textbf{odds ratios} by exponentiating the estimated parameters. As discussed in \cite{notes}, odds ratios provide a more intuitive understanding of effect size: they indicate how the odds of belonging to a certain category change for a one-unit increase in a predictor, holding the other variables constant.
+
+<<>>=
+# Display exponentiated coefficients (odds ratios)
+exp(coef(mod2))
+@
+
+For example, we observe that doing extracurricular activities multiplies the odds of being in the class A by 4365.85 instead of being in F.
+Some of the resulting odds ratios are remarkably large. For instance, in the equation for Class A, the odds ratio for \textit{ParentalSupport4} exceeds $7.4 \times 10^{10}$, and similarly large values appear for other levels of support in classes A and B. These extreme values suggest a very strong association between parental support and the likelihood of achieving high academic performance.
+
+To address this issue and reduce the magnitude of the odds ratios, we consider two strategies. Although the choice of the reference category in multinomial logistic regression is statistically arbitrary, it has important implications for the numerical behavior and interpretability of the model. When the reference level has very few observations, the logits comparing other categories to it can become extremely large or unstable. This phenomenon is related to what Agresti describes as \textit{quasi-complete separation}, where near-perfect predictability leads to inflated estimates and standard errors \cite[Ch.~8]{agresti2019cathegorical}.
+
+To better understand the effect of the current parametrization, we examine the distribution of \textit{ParentalSupport} across grade categories. The following contingency table shows the number of students in each combination:
+<<include=FALSE>>=
+# Store the contingency table in an object
+tab <- table(dataf$ParentalSupport, dataf$GradeClass)
+
+# Add a column with row totals
+tab_with_total <- cbind(tab, Total = rowSums(tab))
+
+@
+
+<<>>=
+tab_with_total
+@
+
+As seen in the table, students with low levels of parental support (e.g., level $0$) are essentially absent from the highest performance categories (A and B), while students with higher support (levels $3$ and $4$) are overrepresented. This highly unbalanced distribution helps to explain the extreme odds ratios: the model requires very large coefficients to reflect the steep increase in the probability of top performance when parental support increases.
+
+To mitigate this issue, one improvement is to reparametrize the model by choosing level $2$ as the reference category. This level presents a more balanced distribution across grade classes, including a reasonable number of students in both high and low performance groups \cite{kerosky_dummycoding}.
+
+<<include=FALSE>>=
+# Change reference level of ParentalSupport to 2
+dataf$ParentalSupport <- relevel(dataf$ParentalSupport, ref = "2")
+
+# Refit the model
+mod_ref2 <- multinom(GradeClass ~ Age + StudyTimeWeekly + Absences + Tutoring + 
+                     ParentalSupport + Extracurricular + Sports + Music, 
+                     data = dataf, maxit = 1000, model = TRUE)
+@
+
+<<include=FALSE>>=
+# Display the new odds ratios
+exp(coef(mod_ref2))
+@
+
+It can be seen that by setting level \textbf{2} (a moderate level of parental support) as the reference category, we obtain a more balanced and representative baseline. This change leads to \textbf{more stable and interpretable odds ratios}, avoiding the extremely large or small estimates seen when level $0$ was used.
+
+Another possible strategy is to apply regularization. Penalized regression methods such as Lasso (L1 regularization) add a penalty to the likelihood that shrinks large coefficients. In multinomial logistic regression, regularization is especially useful when some predictor levels are sparse or predictors are correlated. This technique helps reduce overfitting and improve model generalization \cite{friedman2010glmnet}. It is available in R through the widely used \texttt{glmnet} package.
+
+An additional strategy to address the imbalance in the distribution of \textit{Parental Support} is to \textbf{recode the original five-level variable into three broader categories}. Specifically, we group levels $0$ and $1$ (``None'' and ``Low'') into a single category of \textit{low support}, retain level $2$ as a distinct category representing \textit{moderate support}, and merge levels $3$ and $4$ (``High'' and ``Very High'') into a single group of \textit{high support}. By reducing the number of categories, we not only facilitate interpretation but also \textbf{increase the number of observations in each group}, improving the statistical robustness of the model and reducing the risk of unstable estimates.
+
+
+Let's check the goodness of fit of the new model calculating  McFadden, Cox and Snell, and Nagelkerke pseudo R-squared values:
+
+<<>>=
+PseudoR2(mod2, which = c("McFadden", "CoxSnell", "Nagelkerke"))
+@ 
+
+$R^2_{McFadden}=0.7572478$ suggests that the predictors in the model provide a 75.72\% improvement in the log-likelihood over the null model, which is considered incredibly good. It is lower than the coefficient we computed for the full model, but it is still a really good fit. In addition, $R^2_{CoxSnell}=0.8527332$ takes a value near $1$, so the fit seems to be great. Moreover, $R^2_{Nagelkerke}=0.9265752$ takes a value really close to $1$, which indicates an amazing fit. In conclusion, we can ensure an excellent fit of the model.
+
+\paragraph{Predicting a new student's performance.}
+
+Following the approach described in \cite{ramon}, we begin the evaluation of our final model by computing the confusion matrix, which summarizes the correspondence between real and predicted grade categories. 
+
+<<echo=FALSE, fig.height=2.2, fig.width=4, fig.align='center', results='hide'>>=
+library(ggplot2)
+
+# Define custom color palette (green shades)
+custom_palette <- c("#E0F8ED", "#A0D6B4", "#004D33")
+
+# Generate predictions and confusion matrix
+pred <- predict(mod2)
+conf_mat <- table(Real = dataf$GradeClass, Predicho = pred)
+conf_df <- as.data.frame(conf_mat)
+
+# Plot confusion matrix
+ggplot(conf_df, aes(x = Predicho, y = Real, fill = Freq)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = Freq), color = "black", size = 5) +
+  scale_fill_gradientn(colours = custom_palette) +
+  labs(title = "Confusion Matrix", x = "Prediction", y = "Real") +
+  theme_minimal()
+@
+
+Overall, the model demonstrates a good ability to predict the correct grade class, as seen from the high values along the diagonal of the confusion matrix. Moreover, when the model makes a mistake, it tends to predict a class that is adjacent to the true one. For instance, students from class \texttt{D} are often misclassified as \texttt{C} or \texttt{F}, and class \texttt{B} is most often confused with \texttt{C}. This behavior indicates that the model captures the underlying ordinal structure of the grade categories, despite treating them as nominal during training.
+
+In addition to visual inspection via the confusion matrix, we can quantify the overall performance of the model by calculating its accuracy. This corresponds to the proportion of correct predictions over the total number of cases:
+
+<<>>=
+mean(pred == dataf$GradeClass)
+@
+The result indicates that the model achieves an accuracy of approximately \textbf{85.6\%}, which confirms its good predictive ability.
+
+To further illustrate the practical use of the model, we simulate the academic profile of a hypothetical student. This student is 16 years old, studies around 5 hours per week, has low absenteeism (3 absences), receives very high parental support, does not attend private tutoring or music activities, but participates in sports. These values represent a reasonably typical scenario of moderate effort and strong family involvement.
+
+<<include=FALSE>>=
+# Create new data (can include one or more observations)
+new_data <- data.frame(
+  Age = 16,
+  StudyTimeWeekly = 5,
+  Absences = 3,
+  Tutoring = factor("Yes", levels = levels(dataf$Tutoring)),
+  ParentalSupport = factor("4", levels = levels(dataf$ParentalSupport)),  
+  Extracurricular = factor("No", levels = levels(dataf$Extracurricular)),
+  Sports = factor("Yes", levels = levels(dataf$Sports)),
+  Music = factor("No", levels = levels(dataf$Music))
+)
+
+@ 
+
+<<>>=
+# Predict class
+predict(mod2, newdata = new_data)
+
+# Predict probabilities for each class
+predict(mod2, newdata = new_data, type = "probs")
+@
+
+According to the model, this student's predicted academic performance class is \textbf{B}, with an estimated probability of \textbf{61.2\%}. The second most likely category is \textbf{A} with \textbf{38.5\%}, while the probabilities of the remaining classes are negligible. This result supports the idea that \textit{Parental support}, \textit{Sports involvement}, and \textit{Study time} are key factors in predicting academic success, as they were retained in the reduced model after variable selection.
+
+\section{Conclusions}
+In summary, the results show that gender, ethnicity, parental education level, and participation in volunteering activities do not appear to be determining factors in academic performance. Specifically, these variables do not significantly increase the likelihood that failing students will improve their grades. By contrast, high levels of \textbf{parental support} are strongly associated with better academic outcomes across the board. Students who initially receive an F grade and report stronger parental involvement are much more likely to improve, with particularly large increases in the chances of moving up to A or B, and still considerable effects for transitions to C or D. \textbf{Extracurricular activities} also contribute positively to academic improvement. Among them, sports show a greater impact than music, but both are associated with an increased probability of moving from failure to higher grades. Receiving \textbf{academic tutoring} is another influential factor, clearly associated with increased chances of obtaining better grades—especially notable in improvements to B and A levels, though beneficial across all grade categories. In contrast, \textbf{age} does not seem to have a meaningful influence on academic recovery, and study time, although showing a positive effect, contributes only moderately to grade improvement. Meanwhile,\textbf{ school absences} are consistently linked to lower chances of academic progress. Students who miss more classes are significantly less likely to improve, regardless of the target grade.
+
+Overall, these findings emphasize the importance of supportive environments—both at home and in school—in fostering academic development. \textbf{Rather than innate characteristics or demographic factors, it is the presence of supportive, structured, and enriching contexts that most consistently predict improvements from failing to higher performance levels.}
+
+Students can enhance their academic performance by maintaining consistent attendance, adopting a healthy lifestyle, and engaging in activities that allow them to disconnect from academic stress. Furthermore, parents play a fundamental role in the intellectual development of their children, reinforcing the belief that ``learning begins at home.''
+
+\bibliographystyle{apalike}
+\bibliography{referencess}
+
+\end{document}
+
